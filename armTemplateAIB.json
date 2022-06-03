@@ -3,13 +3,13 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
       "imageTemplateName": {
-        "type": "avd10ImageTemplate01"
+        "type": "string"
         },
         "api-version": {
-          "type": "2020-02-14"
+          "type": "string"
         },
         "svclocation": {
-            "type": "eastus"
+            "type": "string"
         }
     },
     
