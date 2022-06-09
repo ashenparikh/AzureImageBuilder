@@ -1,6 +1,6 @@
 # Choose Subscription
 
-subscriptionID = "f0e6a708-6962-41b1-b2d3-a43615d7b4fb"
+$subscriptionID="f0e6a708-6962-41b1-b2d3-a43615d7b4fb"
 
 Select-AzSubscription -SubscriptionName 'CSR-CUSPOC-NMST-ashenparikh-sub02'
 Set-AzContext -SubscriptionId $subscriptionID
@@ -55,7 +55,7 @@ $imageDefName = "win10avd"
 $runOutputName="sigOutput"
 
 # create resource group
-New-AzResourceGroup -Name $imageResourceGroup -Location $location
+#New-AzResourceGroup -Name $imageResourceGroup -Location $location
 
 #specify compute gallery
 $sigGalleryName= "NewmontEnterpriseComputeGallery"
