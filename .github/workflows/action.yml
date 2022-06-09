@@ -27,4 +27,8 @@ jobs:
 
       # Runs a single command using the runners shell
       - name: Run a one-line script
-        run: ./dependencies.ps1
+        uses: Azure/powershell@v1
+        with:
+        inlineScript: |
+          .\dependencies.ps1
+        azPSVersion: "latest"
