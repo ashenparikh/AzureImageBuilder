@@ -30,5 +30,5 @@ jobs:
         uses: Azure/powershell@v1
         with:
         inlineScript: |
-          .\dependencies.ps1
+          ./dependencies.ps1
         azPSVersion: "latest"
