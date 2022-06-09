@@ -1,2 +1,3 @@
 # AzureImageBuilder
-Store image in Azure Compute Gallery, Deploy image to session host for AVD pool
+Build image in Azure Compute Gallery --testing
+Deploy image to session host for AVD pool
