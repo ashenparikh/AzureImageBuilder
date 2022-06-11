@@ -5,34 +5,34 @@ $subscriptionID="f0e6a708-6962-41b1-b2d3-a43615d7b4fb"
 Select-AzSubscription -SubscriptionName 'CSR-CUSPOC-NMST-ashenparikh-sub02'
 Set-AzContext -SubscriptionId $subscriptionID
 
-# Register Resource Providers
-if (Get-AzResourceProvider -ProviderNamespace Microsoft.VirtualMachineImages) {
-    Write-Output "Resource Provider VirtualMachineImages registered"
-}
-else {
-    Register-AzResourceProvider -ProviderNamespace Microsoft.VirtualMachineImages
-}
+# # Register Resource Providers
+# if (Get-AzResourceProvider -ProviderNamespace Microsoft.VirtualMachineImages) {
+#     Write-Output "Resource Provider VirtualMachineImages Already Registered"
+# }
+# else {
+#     Register-AzResourceProvider -ProviderNamespace Microsoft.VirtualMachineImages
+# }
 
-if (Get-AzResourceProvider -ProviderNamespace Microsoft.Microsoft.Storage)  {
-    Write-Output "Resource Provider Microsoft.Storage  registered"
-}
-else {
-    Register-AzResourceProvider -ProviderNamespace Microsoft.Storage
-}
+# if (Get-AzResourceProvider -ProviderNamespace Microsoft.Storage)  {
+#     Write-Output "Resource Provider Microsoft.Storage  Already Registered"
+# }
+# else {
+#     Register-AzResourceProvider -ProviderNamespace Microsoft.Storage
+# }
 
-if (Get-AzResourceProvider -ProviderNamespace Microsoft.Compute) {
-    Write-Output "Resource Provider Microsoft.Compute registered"
-}
-else {
-    Register-AzResourceProvider -ProviderNamespace Microsoft.Compute
-}
+# if (Get-AzResourceProvider -ProviderNamespace Microsoft.Compute) {
+#     Write-Output "Resource Provider Microsoft.Compute Already Registered"
+# }
+# else {
+#     Register-AzResourceProvider -ProviderNamespace Microsoft.Compute
+# }
 
-if (Get-AzResourceProvider -ProviderNamespace Microsoft.KeyVault) {
-    Write-Output "Resource Provider KeyVault registered"
-}
-else {
-    Register-AzResourceProvider -ProviderNamespace Microsoft.KeyVault
-}
+# if (Get-AzResourceProvider -ProviderNamespace Microsoft.KeyVault) {
+#     Write-Output "Resource Provider KeyVault Already Registered"
+# }
+# else {
+#     Register-AzResourceProvider -ProviderNamespace Microsoft.KeyVault
+# }
 
 ##Set up Env Variables 
 
@@ -43,7 +43,7 @@ Import-Module Az.Accounts
 $imageResourceGroup="rsg-usw2-p-vditemplate-01"
 
 # location (see possible locations in main docs)
-$location="eastus"
+$location="westus2"
 
 # image template name
 $imageTemplateName="armTemplateAIB"
@@ -63,15 +63,32 @@ $sigGalleryName= "NewmontEnterpriseComputeGallery"
 ## Create User Identity
 
 # setup role def names, these need to be unique
-$timeInt=$(get-date -UFormat "%s")
+$timeInt=$(get-date -format FileDateTime)
 $imageRoleDefName="Azure Image Builder Image Def"+$timeInt
 $identityName="aibIdentity"+$timeInt
 
 ## Add AZ PS modules to support AzUserAssignedIdentity and Az AIB
-'Az.ImageBuilder', 'Az.ManagedServiceIdentity' | ForEach-Object {Install-Module -Name $_ -AllowPrerelease}
+# Set-PSRepository -Name 'PSGallery' -InstallationPolicy Trusted
+
+# if (Get-Module -Name "Az.ImageBuilder") {
+#     Write-Output "Az.ImageBuilder Already Installed"
+# }
+# else {
+#     Install-Module -Name 'Az.ImageBuilder'
+# }
+
+# if (Get-Module -Name 'Az.ManagedServiceIdentity') {
+#     Write-Output "Az.ManagedServiceIdentity Already Installed"
+# }
+# else {
+#     Install-Module -Name 'Az.ManagedServiceIdentity'
+# }
+
+#Install-Module -Name 'Az.ImageBuilder'
+#Install-Module -Name 'Az.ManagedServiceIdentity'  
 
 # create identity
-New-AzUserAssignedIdentity -ResourceGroupName $imageResourceGroup -Name $identityName
+New-AzUserAssignedIdentity -ResourceGroupName $imageResourceGroup -Name $identityName -Location  $location
 
 $identityNameResourceId=$(Get-AzUserAssignedIdentity -ResourceGroupName $imageResourceGroup -Name $identityName).Id
 $identityNamePrincipalId=$(Get-AzUserAssignedIdentity -ResourceGroupName $imageResourceGroup -Name $identityName).PrincipalId
@@ -92,11 +109,11 @@ Invoke-WebRequest -Uri $aibRoleImageCreationUrl -OutFile $aibRoleImageCreationPa
 New-AzRoleDefinition -InputFile  ./aibRoleImageCreation.json
 
 # grant role definition to image builder service principal
-New-AzRoleAssignment -ObjectId $identityNamePrincipalId -RoleDefinitionName $imageRoleDefName -Scope "/subscriptions/$subscriptionID/resourceGroups/$imageResourceGroup"
+New-AzRoleAssignment -ObjectId $identityNamePrincipalId -RoleDefinitionName $imageRoleDefName -Scope "/subscriptions/$subscriptionID/resourceGroups/$imageResourceGroup" -PrincipalType 'ServicePrincipal'
 
 ## Update Master Template with new variables
 
-#$templateUrl="https://raw.githubusercontent.com/azure/azvmimagebuilder/master/solutions/14_Building_Images_WVD/armTemplateWVD.json"
+$templateUrl="https://raw.githubusercontent.com/azure/azvmimagebuilder/master/solutions/14_Building_Images_WVD/armTemplateWVD.json"
 $templateFilePath = "armTemplateAIB.json"
 
 Invoke-WebRequest -Uri $templateUrl -OutFile $templateFilePath -UseBasicParsing
@@ -112,7 +129,11 @@ Invoke-WebRequest -Uri $templateUrl -OutFile $templateFilePath -UseBasicParsing
 ((Get-Content -path $templateFilePath -Raw) -replace '<imgBuilderId>',$identityNameResourceId) | Set-Content -Path $templateFilePath
 
 #Submit the image
-New-AzResourceGroupDeployment -ResourceGroupName $imageResourceGroup -TemplateFile $templateFilePath -TemplateParameterObject @{"api-Version" = "2020-02-14"} -imageTemplateName $imageTemplateName -svclocation $location
+New-AzResourceGroupDeployment -ResourceGroupName $imageResourceGroup -TemplateFile $templateFilePath -imageTemplateName $imageTemplateName -svclocation $location
+# Optional - if you have any errors running the above, run:
+$getStatus=$(Get-AzImageBuilderTemplate -ResourceGroupName $imageResourceGroup -Name $imageTemplateName)
+$getStatus.ProvisioningErrorCode 
+$getStatus.ProvisioningErrorMessage
 
 #Build the image
 Start-AzImageBuilderTemplate -ResourceGroupName $imageResourceGroup -Name $imageTemplateName -NoWait

@@ -31,7 +31,7 @@
             "identity": {
                 "type": "UserAssigned",
                         "userAssignedIdentities": {
-                        "<imgBuilderId>": {}
+                        "/subscriptions/f0e6a708-6962-41b1-b2d3-a43615d7b4fb/resourcegroups/rsg-usw2-p-vditemplate-01/providers/Microsoft.ManagedIdentity/userAssignedIdentities/aibIdentity20220610T1555484173": {}
                             
                     }
                     },
@@ -102,14 +102,14 @@
             [
                 {   
                     "type": "SharedImage",
-                    "galleryImageId": "/subscriptions/<subscriptionID>/resourceGroups/<rgName>/providers/Microsoft.Compute/galleries/<sharedImageGalName>/images/<imageDefName>",
-                    "runOutputName": "<runOutputName>",
+                    "galleryImageId": "/subscriptions/f0e6a708-6962-41b1-b2d3-a43615d7b4fb/resourceGroups/rsg-usw2-p-vditemplate-01/providers/Microsoft.Compute/galleries/NewmontEnterpriseComputeGallery/images/win10avd",
+                    "runOutputName": "sigOutput",
                     "artifactTags": {
                         "source": "wvd10",
                         "baseosimg": "windows10"
                     },
                     "replicationRegions": [
-                      "<region1>"
+                      "westus2"
 
                     ]
                 }
@@ -120,3 +120,10 @@
     
     ]
 }    
+
+
+
+
+
+
+
